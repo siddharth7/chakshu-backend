@@ -21,4 +21,6 @@ admin.autodiscover()
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^loguser/?$', views.signin, name='signin'),
+    url(r'^signupuser/',views.UserList.as_view()),
+    url(r'^confirm/(?P<activation_key>\w+)/', views.register_confirm, name='confirmemail'),
 ]

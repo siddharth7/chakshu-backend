@@ -2,8 +2,15 @@ from django.contrib.auth.models import User
 from django.http import Http404
 from django.http import HttpResponseForbidden
 from nuser.models import UserProfile
+from nuser.serializers import UserSerializer
 from django.shortcuts import render_to_response,get_object_or_404, render
 from django.http import HttpResponseRedirect, HttpResponse
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
+from rest_framework import status
 
 import hashlib
 import random
@@ -27,13 +34,66 @@ from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 
+@api_view(('POST',))
 def signin(request):
-	phone=request.GET.get('phone')
-	password=request.GET.get('password')
+	phone = request.POST["username"]
+	password = request.POST["password"]
 	print phone, password
-	user = authenticate(username=phone, password=password)
-	login(request, user)
 	list_data={}
+	user = authenticate(username=phone, password=password)
+	if user:
+		list_data['is_user']='Yes'
+	else:
+		list_data['_is_user']='No'
 	list_data['error']='None'
-	return list_data
+	print list_data
+	return Response(json.dumps(list_data))
+
+def register_confirm(request, activation_key):  
+
+    print "yoyo l"
+    user_profile = get_object_or_404(UserProfile, activation_key=activation_key)
+
+    if user_profile.key_expires < timezone.now():
+        return HttpResponse("unable to confirm")
+    user = user_profile.user
+    user.is_active = True
+    user.save()
+    return HttpResponse("account verified")
+
+class UserList(APIView):
+    def post(self, request, format=None):
+    	# data = JSONParser().parse(request)
+    	# print data
+        serializer = UserSerializer(data=request.DATA)
+        if serializer.is_valid():
+            user=serializer.save()
+            user.set_password(user.password)
+            user.is_active=False
+            user.save()
+            email=user.email
+            username=user.username
+            salt = hashlib.sha1(str(random.random())).hexdigest()[:5]            
+            activation_key = hashlib.sha1(salt+email).hexdigest()            
+            key_expires = datetime.datetime.today() + datetime.timedelta(2)
+            user2=User.objects.get(username=username)
+            new_profile = UserProfile(user=user2, activation_key=activation_key, key_expires=key_expires)
+            #profile = profile_form.save(commit=False)
+            new_profile.save()
+            email_subject = 'Account confirmation'
+            email_body = "Hey %s, thanks for signing up. To activate your account, click this link within \
+            48hours http://192.168.56.74:8001/confirm/%s/" % (email, activation_key)
+            send_mail(email_subject, email_body, 'email.chakshu@gmail.com',
+                [email], fail_silently=False)
+            print email_body
+            registered = True
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        user = self.get_object(pk)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 

@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('activation_key', models.CharField(max_length=40, blank=True)),
-                ('key_expires', models.DateTimeField(default=datetime.date(2016, 6, 14))),
+                ('key_expires', models.DateTimeField(default=datetime.date(2016, 6, 17))),
                 ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
             ],
         ),
