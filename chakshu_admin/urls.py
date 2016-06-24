@@ -16,6 +16,8 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from nuser import views
+from django.views.generic import TemplateView
+
 admin.autodiscover()
 
 urlpatterns = [
@@ -23,4 +25,6 @@ urlpatterns = [
     url(r'^loguser/?$', views.signin, name='signin'),
     url(r'^signupuser/',views.UserList.as_view()),
     url(r'^confirm/(?P<activation_key>\w+)/', views.register_confirm, name='confirmemail'),
+    url(r'^addperson/', views.SaveFoundPerson, name='SaveFoundPerson'),
+    url(r'^profile/',TemplateView.as_view(template_name = 'profile.html')),
 ]

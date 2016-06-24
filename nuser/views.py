@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.http import HttpResponseForbidden
-from nuser.models import UserProfile
+from nuser.models import UserProfile, FoundPerson
+from nuser.forms import FoundPersonForm
 from nuser.serializers import UserSerializer
 from django.shortcuts import render_to_response,get_object_or_404, render
 from django.http import HttpResponseRedirect, HttpResponse
@@ -62,10 +63,12 @@ def register_confirm(request, activation_key):
     return HttpResponse("account verified")
 
 class UserList(APIView):
+	
     def post(self, request, format=None):
-    	# data = JSONParser().parse(request)
-    	# print data
-        serializer = UserSerializer(data=request.DATA)
+        """
+        curl -H "Content-Type: application/json" -X POST -d '{"username":phonenumber,"password":password,"name":name,"email":email}' http://192.168.56.74:8001/signupuser/
+        """
+    	serializer = UserSerializer(data=request.DATA)
         if serializer.is_valid():
             user=serializer.save()
             user.set_password(user.password)
@@ -94,6 +97,26 @@ class UserList(APIView):
         user = self.get_object(pk)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+def SaveFoundPerson(request):
+    saved=False
+
+    if request.method=="POST":
+        foundPersonForm = FoundPersonForm(request.POST, request.FILES)
+        if foundPersonForm.is_valid():
+            foundperson = FoundPerson()
+            print "yoyo"
+            foundperson.name = foundPersonForm.cleaned_data["name"]
+            foundperson.location = foundPersonForm.cleaned_data["location"]
+            foundperson.picture = foundPersonForm.cleaned_data["picture"]
+            foundperson.save()
+            all_data = FoundPerson.objects.all()
+            saved = True
+    else:
+        foundPersonForm=FoundPersonForm()
+
+    return render(request, 'saved.html', locals())
+
 
 
 
