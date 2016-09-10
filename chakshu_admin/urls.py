@@ -17,14 +17,20 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from nuser import views
 from django.views.generic import TemplateView
+from django.conf.urls.static import static
+from django.conf import settings
 
 admin.autodiscover()
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^loguser/?$', views.signin, name='signin'),
+    url(r'^getcontribution/?$', views.getcontribution, name='getcontribution'),
     url(r'^signupuser/',views.UserList.as_view()),
+    url(r'^uploadapi/',views.PhotoList.as_view()),
     url(r'^confirm/(?P<activation_key>\w+)/', views.register_confirm, name='confirmemail'),
     url(r'^addperson/', views.SaveFoundPerson, name='SaveFoundPerson'),
+    # url(r'^uploadapi/', views.upload_file, name='upload_file'),
     url(r'^profile/',TemplateView.as_view(template_name = 'profile.html')),
 ]
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

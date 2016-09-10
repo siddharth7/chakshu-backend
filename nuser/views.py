@@ -3,15 +3,17 @@ from django.http import Http404
 from django.http import HttpResponseForbidden
 from nuser.models import UserProfile, FoundPerson
 from nuser.forms import FoundPersonForm
-from nuser.serializers import UserSerializer
+from nuser.serializers import UserSerializer, FoundPersonSerializer
 from django.shortcuts import render_to_response,get_object_or_404, render
 from django.http import HttpResponseRedirect, HttpResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 from rest_framework import permissions
 from rest_framework import status
+from django.http import JsonResponse
 
 import hashlib
 import random
@@ -20,6 +22,7 @@ from django.core import serializers
 from django.core.mail import send_mail
 from django.utils import timezone
 import datetime
+
 
 from django.core.context_processors import csrf
 from django.contrib.auth import logout
@@ -33,7 +36,8 @@ import json
 from django.views.generic.base import View
 from django.core.urlresolvers import reverse
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect,HttpResponseNotAllowed
+
 
 @api_view(('POST',))
 def signin(request):
@@ -43,9 +47,9 @@ def signin(request):
 	list_data={}
 	user = authenticate(username=phone, password=password)
 	if user:
-		list_data['is_user']='Yes'
+		list_data['is_user']="Yes"
 	else:
-		list_data['_is_user']='No'
+		list_data['is_user']="No"
 	list_data['error']='None'
 	print list_data
 	return Response(json.dumps(list_data))
@@ -100,8 +104,9 @@ class UserList(APIView):
 
 def SaveFoundPerson(request):
     saved=False
-
+    print "aa"
     if request.method=="POST":
+        print "aaya post me"
         foundPersonForm = FoundPersonForm(request.POST, request.FILES)
         if foundPersonForm.is_valid():
             foundperson = FoundPerson()
@@ -117,6 +122,36 @@ def SaveFoundPerson(request):
 
     return render(request, 'saved.html', locals())
 
+class PhotoList(APIView):
+    parser_classes = (MultiPartParser, FormParser, FileUploadParser)
+    print "ada"
+    def post(self, request, format=None):
+        serializer = FoundPersonSerializer(data=request.DATA)
+        print request.POST["name"]
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            print serializer.errors
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# @api_view(('GET',))
+def getcontribution(request):
+    try :
+        uploaded_by=request.GET['uploaded_by']
+        all_contributions=FoundPerson.objects.all().filter(uploaded_by=uploaded_by)
+        contribution_items = {}
+        counter=1
+        for contribution in all_contributions:
+            Cname=contribution.name
+            Clocation=contribution.location
+            Cpicture=contribution.picture.url
+            # print Cname, Clocation, Cpicture
+            item = {"Cname":Cname, "Clocation":Clocation,"Cpicture":Cpicture,"Cpicture":Cpicture}
+            contribution_items[counter]=item
+            counter+=1
+        return JsonResponse(contribution_items)
+    except :
+        contribution_items = {}
+        return JsonResponse(contribution_items)
 

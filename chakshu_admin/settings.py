@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+APPEND_SLASH=False
 
 # Application definition
 
@@ -38,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'nuser',
+    'rest_framework',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -101,3 +103,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
+
+MEDIA_ROOT = PROJECT_ROOT
+MEDIA_URL = '/media/'
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'email.chakshu@gmail.com'
+EMAIL_HOST_PASSWORD = 'chakshu_admin'

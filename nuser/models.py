@@ -13,6 +13,9 @@ class UserProfile(models.Model):
         return self.user.username
 
 class FoundPerson(models.Model):
+	uploaded_by=models.CharField(max_length=40, blank=True)
 	name = models.CharField(max_length=40, blank=True)
 	location = models.CharField(max_length=40, blank=True)
 	picture = models.ImageField(upload_to="static/images/products")
+	def __unicode__(self):
+		return self.name + " " + self.uploaded_by
